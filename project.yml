@@ -1,0 +1,18 @@
+name: AutoWrite
+
+options:
+  bundleIdPrefix: com.autowrite
+
+targets:
+  AutoWrite:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+
+    sources:
+      - AutoWrite
+
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.autowrite.app
+      SWIFT_VERSION: "5.0"
+      TARGETED_DEVICE_FAMILY: "1,2"
