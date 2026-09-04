@@ -1,0 +1,68 @@
+name: AutoWrite
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: |
+          sudo xcode-select -s /Applications/Xcode.app
+          xcodebuild -version
+
+      - name: Find Xcode project
+        run: |
+          find . -maxdepth 3 \
+            \( -name "*.xcodeproj" -o -name "*.xcworkspace" \) \
+            -print
+
+      - name: Build
+        run: |
+          PROJECT=$(find . -maxdepth 3 -name "*.xcodeproj" | head -n 1)
+
+          if [ -z "$PROJECT" ]; then
+            echo "没有找到 .xcodeproj"
+            exit 1
+          fi
+
+          SCHEME=$(basename "$PROJECT" .xcodeproj)
+
+          xcodebuild \
+            -project "$PROJECT" \
+            -scheme "$SCHEME" \
+            -sdk iphoneos \
+            -configuration Release \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build
+
+      - name: Package app
+        run: |
+          mkdir -p Payload
+
+          APP=$(find build/Build/Products/Release-iphoneos \
+            -maxdepth 1 \
+            -name "*.app" \
+            -type d | head -n 1)
+
+          if [ -z "$APP" ]; then
+            echo "没有找到编译出来的 .app"
+            exit 1
+          fi
+
+          cp -R "$APP" Payload/
+
+          zip -r AutoWrite-unsigned.ipa Payload
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: AutoWrite-IPA
+          path: AutoWrite-unsigned.ipa
