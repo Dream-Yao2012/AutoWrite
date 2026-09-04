@@ -4,7 +4,7 @@ import SwiftUI
 struct AutoWriteApp: App {
     var body: some Scene {
         WindowGroup {
-             ontentView()
+             ContentView()
         }
     }
 }
