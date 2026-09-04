@@ -11,31 +11,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select Xcode
+      - name: Install XcodeGen
         run: |
-          sudo xcode-select -s /Applications/Xcode.app
-          xcodebuild -version
+          brew install xcodegen
 
-      - name: Find Xcode project
+      - name: Generate Xcode Project
         run: |
-          find . -maxdepth 3 \
-            \( -name "*.xcodeproj" -o -name "*.xcworkspace" \) \
-            -print
+          xcodegen generate
 
       - name: Build
         run: |
-          PROJECT=$(find . -maxdepth 3 -name "*.xcodeproj" | head -n 1)
-
-          if [ -z "$PROJECT" ]; then
-            echo "没有找到 .xcodeproj"
-            exit 1
-          fi
-
-          SCHEME=$(basename "$PROJECT" .xcodeproj)
-
           xcodebuild \
-            -project "$PROJECT" \
-            -scheme "$SCHEME" \
+            -project AutoWrite.xcodeproj \
+            -scheme AutoWrite \
             -sdk iphoneos \
             -configuration Release \
             -derivedDataPath build \
@@ -43,21 +31,13 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             build
 
-      - name: Package app
+      - name: Package IPA
         run: |
           mkdir -p Payload
 
-          APP=$(find build/Build/Products/Release-iphoneos \
-            -maxdepth 1 \
-            -name "*.app" \
-            -type d | head -n 1)
-
-          if [ -z "$APP" ]; then
-            echo "没有找到编译出来的 .app"
-            exit 1
-          fi
-
-          cp -R "$APP" Payload/
+          cp -R \
+            build/Build/Products/Release-iphoneos/AutoWrite.app \
+            Payload/
 
           zip -r AutoWrite-unsigned.ipa Payload
 
