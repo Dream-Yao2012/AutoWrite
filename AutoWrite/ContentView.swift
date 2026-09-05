@@ -8,7 +8,7 @@ struct FireAccount: Identifiable, Codable {
     var enabled: Bool
 }
 
-// MARK: - 主界面
+// MARK: - App
 
 struct ContentView: View {
     var body: some View {
@@ -41,224 +41,82 @@ struct HomeView: View {
 
     @State private var isRunning = false
 
-    private var accountCount: Int {
+    private var accounts: [FireAccount] {
         guard let data = Data(base64Encoded: accountsData),
-              let accounts = try? JSONDecoder().decode(
+              let result = try? JSONDecoder().decode(
                 [FireAccount].self,
                 from: data
               )
         else {
-            return 0
+            return []
         }
 
-        return accounts.filter { $0.enabled }.count
+        return result
+    }
+
+    private var enabledCount: Int {
+        accounts.filter { $0.enabled }.count
     }
 
     var body: some View {
-        NavigationStack {
-            GeometryReader { geometry in
-                ScrollView {
-                    VStack(spacing: 14) {
+        GeometryReader { geometry in
 
-                        // MARK: 顶部 Hero
+            let width = geometry.size.width
+            let horizontalPadding = min(width * 0.045, 20)
+            let contentWidth = width - horizontalPadding * 2
 
-                        VStack(spacing: 8) {
-                            ZStack {
-                                Circle()
-                                    .fill(.white.opacity(0.16))
-                                    .frame(width: 62, height: 62)
+            NavigationStack {
+                ScrollView(.vertical, showsIndicators: false) {
 
-                                Image(systemName: "flame.fill")
-                                    .font(
-                                        .system(
-                                            size: 32,
-                                            weight: .bold
-                                        )
-                                    )
-                                    .foregroundStyle(.white)
-                            }
+                    VStack(spacing: width * 0.035) {
 
-                            Text("Auto Fire")
-                                .font(
-                                    .system(
-                                        size: 26,
-                                        weight: .bold
-                                    )
-                                )
-                                .foregroundStyle(.white)
+                        // MARK: Hero
 
-                            Text("自动管理每日续火花任务")
-                                .font(.system(size: 13))
-                                .foregroundStyle(
-                                    .white.opacity(0.82)
-                                )
-                        }
-                        .frame(
-                            width: geometry.size.width - 32
-                        )
-                        .frame(height: 185)
-                        .background(
-                            LinearGradient(
-                                colors: [
-                                    Color(
-                                        red: 0.96,
-                                        green: 0.25,
-                                        blue: 0.28
-                                    ),
-                                    Color(
-                                        red: 0.72,
-                                        green: 0.06,
-                                        blue: 0.13
-                                    )
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .clipShape(
-                            RoundedRectangle(
-                                cornerRadius: 24
-                            )
-                        )
-                        .shadow(
-                            color: .black.opacity(0.10),
-                            radius: 12,
-                            y: 5
+                        HeroCard(
+                            width: contentWidth
                         )
 
-                        // MARK: 运行状态
+                        // MARK: 状态
 
-                        VStack(alignment: .leading, spacing: 11) {
-                            Text("运行状态")
-                                .font(
-                                    .system(
-                                        size: 16,
-                                        weight: .semibold
-                                    )
-                                )
-
-                            HStack(spacing: 12) {
-                                ZStack {
-                                    Circle()
-                                        .fill(
-                                            isRunning
-                                            ? Color.green.opacity(0.13)
-                                            : Color.orange.opacity(0.13)
-                                        )
-                                        .frame(
-                                            width: 44,
-                                            height: 44
-                                        )
-
-                                    Image(
-                                        systemName:
-                                            isRunning
-                                            ? "bolt.fill"
-                                            : "clock.fill"
-                                    )
-                                    .font(
-                                        .system(
-                                            size: 18,
-                                            weight: .semibold
-                                        )
-                                    )
-                                    .foregroundStyle(
-                                        isRunning
-                                        ? .green
-                                        : .orange
-                                    )
-                                }
-
-                                VStack(
-                                    alignment: .leading,
-                                    spacing: 3
-                                ) {
-                                    Text(
-                                        isRunning
-                                        ? "正在运行"
-                                        : "等待运行"
-                                    )
-                                    .font(
-                                        .system(
-                                            size: 15,
-                                            weight: .semibold
-                                        )
-                                    )
-
-                                    Text(
-                                        isRunning
-                                        ? "任务正在执行中"
-                                        : "准备就绪"
-                                    )
-                                    .font(.system(size: 12))
-                                    .foregroundStyle(.secondary)
-                                }
-
-                                Spacer()
-
-                                Circle()
-                                    .fill(
-                                        isRunning
-                                        ? .green
-                                        : .gray.opacity(0.45)
-                                    )
-                                    .frame(
-                                        width: 9,
-                                        height: 9
-                                    )
-                            }
-                        }
-                        .padding(15)
-                        .frame(
-                            width: geometry.size.width - 32
-                        )
-                        .background(.background)
-                        .clipShape(
-                            RoundedRectangle(
-                                cornerRadius: 19
-                            )
-                        )
-                        .shadow(
-                            color: .black.opacity(0.045),
-                            radius: 7,
-                            y: 3
+                        StatusCard(
+                            width: contentWidth,
+                            isRunning: isRunning
                         )
 
-                        // MARK: 数据卡片
+                        // MARK: 数据
 
-                        HStack(spacing: 12) {
-                            DataCard(
-                                title: "账号",
-                                value: "\(accountCount)",
-                                icon: "person.2.fill"
+                        HStack(spacing: width * 0.03) {
+
+                            StatCard(
+                                icon: "person.2.fill",
+                                value: "\(enabledCount)",
+                                title: "账号"
                             )
 
-                            DataCard(
-                                title: "今日任务",
-                                value: "\(accountCount)",
-                                icon: "checklist"
+                            StatCard(
+                                icon: "checklist",
+                                value: "\(enabledCount)",
+                                title: "今日任务"
                             )
 
-                            DataCard(
-                                title: "已完成",
+                            StatCard(
+                                icon: "checkmark.circle.fill",
                                 value: "0",
-                                icon: "checkmark.circle.fill"
+                                title: "已完成"
                             )
                         }
-                        .frame(
-                            width: geometry.size.width - 32
-                        )
+                        .frame(width: contentWidth)
 
                         // MARK: 运行按钮
 
                         Button {
-                            withAnimation(
-                                .easeInOut(duration: 0.2)
-                            ) {
+                            withAnimation(.easeInOut(duration: 0.2)) {
                                 isRunning.toggle()
                             }
                         } label: {
-                            HStack(spacing: 8) {
+
+                            HStack(spacing: 9) {
+
                                 Image(
                                     systemName:
                                         isRunning
@@ -273,15 +131,15 @@ struct HomeView: View {
                                 )
                                 .font(
                                     .system(
-                                        size: 16,
+                                        size: min(width * 0.043, 17),
                                         weight: .semibold
                                     )
                                 )
                             }
                             .foregroundStyle(.white)
                             .frame(
-                                width: geometry.size.width - 32,
-                                height: 50
+                                width: contentWidth,
+                                height: min(width * 0.135, 54)
                             )
                             .background(
                                 isRunning
@@ -290,79 +148,301 @@ struct HomeView: View {
                             )
                             .clipShape(
                                 RoundedRectangle(
-                                    cornerRadius: 15
+                                    cornerRadius: min(width * 0.04, 16)
                                 )
                             )
                         }
-                        .padding(.top, 2)
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.top, 10)
-                    .padding(.bottom, 18)
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, horizontalPadding)
+                    .padding(.top, width * 0.025)
+                    .padding(.bottom, 24)
                 }
-                .scrollIndicators(.hidden)
+                .background(
+                    Color(.systemGroupedBackground)
+                        .ignoresSafeArea()
+                )
+                .navigationTitle("Auto Fire")
             }
-            .background(
-                Color(.systemGroupedBackground)
-                    .ignoresSafeArea()
-            )
-            .navigationTitle("Auto Fire")
-            .navigationBarTitleDisplayMode(.large)
         }
+    }
+}
+
+// MARK: - Hero
+
+struct HeroCard: View {
+
+    let width: CGFloat
+
+    var body: some View {
+
+        let iconSize = min(width * 0.17, 70)
+
+        VStack(spacing: width * 0.018) {
+
+            ZStack {
+                Circle()
+                    .fill(.white.opacity(0.16))
+                    .frame(
+                        width: iconSize,
+                        height: iconSize
+                    )
+
+                Image(systemName: "flame.fill")
+                    .font(
+                        .system(
+                            size: iconSize * 0.48,
+                            weight: .bold
+                        )
+                    )
+                    .foregroundStyle(.white)
+            }
+
+            Text("Auto Fire")
+                .font(
+                    .system(
+                        size: min(width * 0.07, 28),
+                        weight: .bold
+                    )
+                )
+                .foregroundStyle(.white)
+
+            Text("自动管理每日续火花任务")
+                .font(
+                    .system(
+                        size: min(width * 0.035, 14)
+                    )
+                )
+                .foregroundStyle(
+                    .white.opacity(0.82)
+                )
+        }
+        .frame(
+            width: width,
+            height: min(width * 0.48, 190)
+        )
+        .background(
+            LinearGradient(
+                colors: [
+                    Color(
+                        red: 0.96,
+                        green: 0.25,
+                        blue: 0.28
+                    ),
+                    Color(
+                        red: 0.72,
+                        green: 0.06,
+                        blue: 0.13
+                    )
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .clipShape(
+            RoundedRectangle(
+                cornerRadius: min(width * 0.065, 25)
+            )
+        )
+        .shadow(
+            color: .black.opacity(0.10),
+            radius: 12,
+            y: 5
+        )
+    }
+}
+
+// MARK: - 状态卡片
+
+struct StatusCard: View {
+
+    let width: CGFloat
+    let isRunning: Bool
+
+    var body: some View {
+
+        let iconSize = min(width * 0.115, 46)
+
+        VStack(alignment: .leading, spacing: width * 0.025) {
+
+            Text("运行状态")
+                .font(
+                    .system(
+                        size: min(width * 0.043, 17),
+                        weight: .semibold
+                    )
+                )
+
+            HStack(spacing: width * 0.035) {
+
+                ZStack {
+
+                    Circle()
+                        .fill(
+                            isRunning
+                            ? Color.green.opacity(0.13)
+                            : Color.orange.opacity(0.13)
+                        )
+                        .frame(
+                            width: iconSize,
+                            height: iconSize
+                        )
+
+                    Image(
+                        systemName:
+                            isRunning
+                            ? "bolt.fill"
+                            : "clock.fill"
+                    )
+                    .font(
+                        .system(
+                            size: iconSize * 0.42,
+                            weight: .semibold
+                        )
+                    )
+                    .foregroundStyle(
+                        isRunning
+                        ? .green
+                        : .orange
+                    )
+                }
+
+                VStack(
+                    alignment: .leading,
+                    spacing: 3
+                ) {
+
+                    Text(
+                        isRunning
+                        ? "正在运行"
+                        : "等待运行"
+                    )
+                    .font(
+                        .system(
+                            size: min(width * 0.04, 16),
+                            weight: .semibold
+                        )
+                    )
+
+                    Text(
+                        isRunning
+                        ? "任务正在执行中"
+                        : "准备就绪"
+                    )
+                    .font(
+                        .system(
+                            size: min(width * 0.032, 13)
+                        )
+                    )
+                    .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                Circle()
+                    .fill(
+                        isRunning
+                        ? .green
+                        : .gray.opacity(0.4)
+                    )
+                    .frame(
+                        width: 9,
+                        height: 9
+                    )
+            }
+        }
+        .padding(width * 0.04)
+        .frame(width: width)
+        .background(.background)
+        .clipShape(
+            RoundedRectangle(
+                cornerRadius: min(width * 0.05, 20)
+            )
+        )
+        .shadow(
+            color: .black.opacity(0.045),
+            radius: 7,
+            y: 3
+        )
     }
 }
 
 // MARK: - 数据卡片
 
-struct DataCard: View {
+struct StatCard: View {
 
-    let title: String
-    let value: String
     let icon: String
+    let value: String
+    let title: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 7) {
-            Image(systemName: icon)
-                .font(
-                    .system(
-                        size: 14,
-                        weight: .semibold
-                    )
-                )
-                .foregroundStyle(.orange)
 
-            Text(value)
-                .font(
-                    .system(
-                        size: 22,
-                        weight: .bold
-                    )
-                )
+        GeometryReader { geometry in
 
-            Text(title)
-                .font(.system(size: 11))
-                .foregroundStyle(.secondary)
-        }
-        .frame(
-            maxWidth: .infinity,
-            alignment: .leading
-        )
-        .padding(12)
-        .background(.background)
-        .clipShape(
-            RoundedRectangle(
-                cornerRadius: 17
+            VStack(
+                alignment: .leading,
+                spacing: geometry.size.width * 0.07
+            ) {
+
+                Image(systemName: icon)
+                    .font(
+                        .system(
+                            size: min(
+                                geometry.size.width * 0.13,
+                                18
+                            ),
+                            weight: .semibold
+                        )
+                    )
+                    .foregroundStyle(.orange)
+
+                Text(value)
+                    .font(
+                        .system(
+                            size: min(
+                                geometry.size.width * 0.20,
+                                26
+                            ),
+                            weight: .bold
+                        )
+                    )
+
+                Text(title)
+                    .font(
+                        .system(
+                            size: min(
+                                geometry.size.width * 0.11,
+                                13
+                            )
+                        )
+                    )
+                    .foregroundStyle(.secondary)
+            }
+            .frame(
+                maxWidth: .infinity,
+                maxHeight: .infinity,
+                alignment: .topLeading
             )
-        )
-        .shadow(
-            color: .black.opacity(0.035),
-            radius: 6,
-            y: 2
-        )
+            .padding(
+                min(geometry.size.width * 0.13, 14)
+            )
+            .background(.background)
+            .clipShape(
+                RoundedRectangle(
+                    cornerRadius: 18
+                )
+            )
+            .shadow(
+                color: .black.opacity(0.035),
+                radius: 6,
+                y: 2
+            )
+        }
+        .aspectRatio(0.92, contentMode: .fit)
     }
 }
 
-// MARK: - 账号页面
+// MARK: - 账号
 
 struct AccountsView: View {
 
@@ -373,23 +453,30 @@ struct AccountsView: View {
     @State private var showingAdd = false
 
     var body: some View {
+
         NavigationStack {
+
             ZStack {
+
                 Color(.systemGroupedBackground)
                     .ignoresSafeArea()
 
                 if accounts.isEmpty {
+
                     EmptyAccountsView {
                         showingAdd = true
                     }
+
                 } else {
+
                     List {
-                        ForEach(
-                            $accounts
-                        ) { $account in
+
+                        ForEach($accounts) { $account in
 
                             HStack(spacing: 12) {
+
                                 ZStack {
+
                                     Circle()
                                         .fill(
                                             account.enabled
@@ -416,10 +503,11 @@ struct AccountsView: View {
                                     alignment: .leading,
                                     spacing: 3
                                 ) {
+
                                     Text(account.name)
                                         .font(
                                             .system(
-                                                size: 15,
+                                                size: 16,
                                                 weight: .semibold
                                             )
                                         )
@@ -429,7 +517,7 @@ struct AccountsView: View {
                                         ? "已启用"
                                         : "已停用"
                                     )
-                                    .font(.system(size: 12))
+                                    .font(.caption)
                                     .foregroundStyle(.secondary)
                                 }
 
@@ -446,9 +534,11 @@ struct AccountsView: View {
                             .padding(.vertical, 4)
                         }
                         .onDelete { indexSet in
+
                             accounts.remove(
                                 atOffsets: indexSet
                             )
+
                             saveAccounts()
                         }
                     }
@@ -457,9 +547,11 @@ struct AccountsView: View {
             }
             .navigationTitle("账号")
             .toolbar {
+
                 ToolbarItem(
                     placement: .topBarTrailing
                 ) {
+
                     Button {
                         showingAdd = true
                     } label: {
@@ -470,7 +562,9 @@ struct AccountsView: View {
             .sheet(
                 isPresented: $showingAdd
             ) {
+
                 AddAccountView { name in
+
                     accounts.append(
                         FireAccount(
                             name: name,
@@ -488,6 +582,7 @@ struct AccountsView: View {
     }
 
     private func saveAccounts() {
+
         if let data = try? JSONEncoder().encode(
             accounts
         ) {
@@ -497,6 +592,7 @@ struct AccountsView: View {
     }
 
     private func loadAccounts() {
+
         guard
             let data = Data(
                 base64Encoded: accountsData
@@ -514,28 +610,31 @@ struct AccountsView: View {
     }
 }
 
-// MARK: - 空账号页面
+// MARK: - 空账号
 
 struct EmptyAccountsView: View {
 
     let addAction: () -> Void
 
     var body: some View {
-        VStack(spacing: 14) {
+
+        VStack(spacing: 15) {
+
             ZStack {
+
                 Circle()
                     .fill(
                         Color.orange.opacity(0.11)
                     )
                     .frame(
-                        width: 78,
-                        height: 78
+                        width: 80,
+                        height: 80
                     )
 
                 Image(systemName: "flame.fill")
                     .font(
                         .system(
-                            size: 30,
+                            size: 31,
                             weight: .semibold
                         )
                     )
@@ -545,7 +644,7 @@ struct EmptyAccountsView: View {
             Text("还没有账号")
                 .font(
                     .system(
-                        size: 20,
+                        size: 21,
                         weight: .semibold
                     )
                 )
@@ -555,6 +654,7 @@ struct EmptyAccountsView: View {
                 .foregroundStyle(.secondary)
 
             Button(action: addAction) {
+
                 Label(
                     "添加账号",
                     systemImage: "plus"
@@ -589,9 +689,13 @@ struct AddAccountView: View {
     let onSave: (String) -> Void
 
     var body: some View {
+
         NavigationStack {
+
             Form {
+
                 Section("账号信息") {
+
                     TextField(
                         "账号名称",
                         text: $name
@@ -599,6 +703,7 @@ struct AddAccountView: View {
                 }
 
                 Section {
+
                     Text(
                         "请只添加你自己授权使用的账号。"
                     )
@@ -609,9 +714,11 @@ struct AddAccountView: View {
             .navigationTitle("添加账号")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+
                 ToolbarItem(
                     placement: .cancellationAction
                 ) {
+
                     Button("取消") {
                         dismiss()
                     }
@@ -620,7 +727,9 @@ struct AddAccountView: View {
                 ToolbarItem(
                     placement: .confirmationAction
                 ) {
+
                     Button("保存") {
+
                         let trimmed =
                             name.trimmingCharacters(
                                 in: .whitespacesAndNewlines
@@ -654,11 +763,17 @@ struct SettingsView: View {
     private var workflow = "send.yml"
 
     var body: some View {
+
         NavigationStack {
+
             Form {
+
                 Section {
+
                     HStack(spacing: 12) {
+
                         ZStack {
+
                             RoundedRectangle(
                                 cornerRadius: 13
                             )
@@ -678,7 +793,8 @@ struct SettingsView: View {
                             )
 
                             Image(
-                                systemName: "flame.fill"
+                                systemName:
+                                    "flame.fill"
                             )
                             .font(.title3)
                             .foregroundStyle(.white)
@@ -688,6 +804,7 @@ struct SettingsView: View {
                             alignment: .leading,
                             spacing: 3
                         ) {
+
                             Text("Auto Fire")
                                 .font(.headline)
 
@@ -704,36 +821,33 @@ struct SettingsView: View {
                 }
 
                 Section("GitHub 配置") {
+
                     TextField(
                         "Owner",
                         text: $owner
                     )
-                    .textInputAutocapitalization(
-                        .never
-                    )
+                    .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
 
                     TextField(
                         "Repository",
                         text: $repository
                     )
-                    .textInputAutocapitalization(
-                        .never
-                    )
+                    .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
 
                     TextField(
                         "Workflow",
                         text: $workflow
                     )
-                    .textInputAutocapitalization(
-                        .never
-                    )
+                    .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                 }
 
                 Section("应用") {
+
                     HStack {
+
                         Label(
                             "版本",
                             systemImage:
@@ -742,13 +856,12 @@ struct SettingsView: View {
 
                         Spacer()
 
-                        Text("V1.1")
-                            .foregroundStyle(
-                                .secondary
-                            )
+                        Text("V1.2")
+                            .foregroundStyle(.secondary)
                     }
 
                     HStack {
+
                         Label(
                             "项目",
                             systemImage:
@@ -758,9 +871,7 @@ struct SettingsView: View {
                         Spacer()
 
                         Text("Auto Fire")
-                            .foregroundStyle(
-                                .secondary
-                            )
+                            .foregroundStyle(.secondary)
                     }
                 }
             }
