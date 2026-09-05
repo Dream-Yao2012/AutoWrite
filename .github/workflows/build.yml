@@ -31,13 +31,26 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             build
 
+      - name: Find App
+        run: |
+          echo "正在查找生成的 App..."
+          find build -name "*.app" -type d
+
       - name: Package IPA
         run: |
           mkdir -p Payload
 
-          cp -R \
-            build/Build/Products/Release-iphoneos/AutoWrite.app \
-            Payload/
+          APP_PATH=$(find build -name "*.app" -type d | head -n 1)
+
+          if [ -z "$APP_PATH" ]; then
+            echo "❌ 没有找到 .app 文件"
+            find build -maxdepth 8 -type d
+            exit 1
+          fi
+
+          echo "✅ 找到 App：$APP_PATH"
+
+          cp -R "$APP_PATH" Payload/
 
           zip -r AutoWrite-unsigned.ipa Payload
 
