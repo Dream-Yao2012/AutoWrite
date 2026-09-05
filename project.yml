@@ -1,10 +1,10 @@
-name: Auto Fire
+name: AutoWrite
 
 options:
-  bundleIdPrefix: com.autofire
+  bundleIdPrefix: com.autowrite
 
 targets:
-  Auto Fire:
+  AutoWrite:
     type: application
     platform: iOS
     deploymentTarget: "17.0"
@@ -13,17 +13,10 @@ targets:
       - AutoWrite
 
     settings:
-      PRODUCT_BUNDLE_IDENTIFIER: com.autofire.app
-      PRODUCT_NAME: Auto Fire
+      PRODUCT_BUNDLE_IDENTIFIER: com.autowrite.app
+      PRODUCT_NAME: "Auto Fire"
+      ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
       SWIFT_VERSION: "5.0"
       TARGETED_DEVICE_FAMILY: "1,2"
       GENERATE_INFOPLIST_FILE: YES
-      INFOPLIST_KEY_CFBundleDisplayName: Auto Fire
-  settings:
-  PRODUCT_BUNDLE_IDENTIFIER: com.autofire.app
-  PRODUCT_NAME: Auto Fire
-  ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-  SWIFT_VERSION: "5.0"
-  TARGETED_DEVICE_FAMILY: "1,2"
-  GENERATE_INFOPLIST_FILE: YES
-  INFOPLIST_KEY_CFBundleDisplayName: Auto Fire
+      INFOPLIST_KEY_CFBundleDisplayName: "Auto Fire"
