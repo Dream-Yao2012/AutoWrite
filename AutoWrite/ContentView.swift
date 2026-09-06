@@ -5,8 +5,8 @@ struct ContentView: View {
 
     // MARK: - 自定义文字
     // 以后直接修改这里即可
-    private let title = "你的大标题"
-    private let subtitle = "这里可以填写副标题"
+    private let title = "欢迎使用DM工具箱"
+    private let subtitle = "由Dream创建"
 
     var body: some View {
         NavigationStack {
